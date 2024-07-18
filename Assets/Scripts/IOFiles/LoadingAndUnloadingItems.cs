@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.CompilerServices;
+using UnityEditor;
 using UnityEngine;
 
 public static class LoadingAndUnloadingItems
@@ -22,22 +21,52 @@ public static class LoadingAndUnloadingItems
         AddItemToSaveFile();
     }
 
-
+    // re add items to the inventory from the saved text file .. called from CreateIOFiles.cs on reloading
     public static void ReloadItems()
     {
         using (StreamReader sr = File.OpenText(StaticFileNames.savePath))
         {
-            CountNumberOfItemsInInventory(sr); // read first line (string, stating amount of items in inventory)
-            for (int i = 0; i < numberOfItemsInList; i++) // read and add "items" to the list
+            if (sr.Peek() > -1 )
             {
-                AddItemToList(sr.ReadLine());
+                CountNumberOfItemsInInventory(sr); // read first line (string, stating amount of items in inventory)
+                Debug.Log($"reloading items .. numberOfItemsInList: {numberOfItemsInList}..");
+                for (int i = 0; i < numberOfItemsInList; i++) // read and add "items" to the list
+                {
+                    AddItemToList(sr.ReadLine());
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"text file is empty..");
             }
         }
+        AssetDatabase.Refresh();
+    }
+
+    public static void ClearListAndReloadItems()
+    {
+        ReturnListItems().Clear();
+        ResetItemCount();
+        ReloadItems();
+    }
+
+    public static void DeleteSavedItemsFromTextFile()
+    {
+        using (StreamWriter sw = File.CreateText(StaticFileNames.savePath))
+        {
+            sw.Close();
+        }
+        AssetDatabase.Refresh();
     }
 
     private static void AddItemToList(string _itemName)
     {
         listOfItems.Add(_itemName);
+    }
+
+    private static void ResetItemCount()
+    {
+        numberOfItemsInList = 0;
     }
 
     private static void IncrementNumberCount()
@@ -53,11 +82,10 @@ public static class LoadingAndUnloadingItems
             if (char.IsDigit(child))
             {
                 _tempNum += Convert.ToString(child);
-                Debug.Log($"_tempNum: {_tempNum}");
             }
         }
         numberOfItemsInList = int.Parse(_tempNum);
-        Debug.Log($"numberOfItemsInList: {numberOfItemsInList}");
+        //Debug.Log($"numberOfItemsInList: {numberOfItemsInList}");
     }
 
     private static void AddItemToSaveFile()
@@ -71,5 +99,6 @@ public static class LoadingAndUnloadingItems
                 sw.WriteLine($"{listOfItems[i]}");
             }
         }
+        AssetDatabase.Refresh();
     }
 }
