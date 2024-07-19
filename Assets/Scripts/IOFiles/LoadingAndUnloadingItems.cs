@@ -59,6 +59,11 @@ public static class LoadingAndUnloadingItems
         AssetDatabase.Refresh();
     }
 
+    public static int ReturnCurrentAmountOfItemsInList()
+    {
+        return numberOfItemsInList;
+    }
+
     private static void AddItemToList(string _itemName)
     {
         listOfItems.Add(_itemName);
